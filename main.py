@@ -1,10 +1,12 @@
-import random
 from sys import exit
+
 import pygame as pg
+
 import Generation.generation
 import container
 
-gn = Generation.generation.MazeGeneration()
+gn = Generation.generation.MazeGen()
+
 
 class Main(container.Container):
 
@@ -13,10 +15,10 @@ class Main(container.Container):
         self._main()
 
     def _main(self):
-        # neighboars = gn.find_neighbors(rects, 50)
-        maze = gn.generate_maze()
-        gn.visulaize(maze)
-        print(maze)
+        rects = gn.draw_maze()
+        path_parts = gn.create_path_parts(rects)
+        gn.generate_maze(rects, path_parts)
+
         while True:
             self._check_for_exit()
             self.clock.tick(self.fps)
