@@ -2,6 +2,9 @@ import pygame as pg
 
 
 class Container:
+    # Basic properties of the maze algorithm.
+    # Screen size can be set to whatever, as long as: size % 100 == 0
+
     screen = pg.display.set_mode((1800, 900))
 
     screen_width = screen.get_width()

@@ -1,5 +1,4 @@
 import random
-import time
 
 import pygame as pg
 
@@ -11,17 +10,19 @@ class MazeGen(container.Container):
         super().__init__()
 
     def draw_maze(self):
+        # Just drawing the rectangles visible before pressing space.
         rects = []
         index = 0
         for x in range(0, self.screen_width, self.rect_size):
             for y in range(0, self.screen_height, self.rect_size):
                 rects.append(
-                    [pg.draw.rect(self.screen, "red", (x, y, self.rect_size, self.rect_size), 2), index])
+                    [pg.draw.rect(self.screen, "black", (x, y, self.rect_size, self.rect_size), 2), index])
                 index += 1
 
         return rects
 
     def create_path_parts(self, rects):
+        # Path parts are the walls
         path_parts = []
 
         column_starts = [x[1] for x in rects if x[0].y == 0]
@@ -44,7 +45,10 @@ class MazeGen(container.Container):
         return [x for x in path_parts if x["connects"][0] is not None and x["connects"][1] is not None]
 
     def generate_maze(self, rects, path_parts):
+        # Generating the maze using slightly edited version of Kruskal's algorithm.
+        # For description thanks to: http://weblog.jamisbuck.org/2011/1/3/maze-generation-kruskal-s-algorithm
         run = True
+
         first_side = True
         selected_set = None
         blocked_walls = []
@@ -67,7 +71,7 @@ class MazeGen(container.Container):
                 rect_2[1] = selected_set
                 rect_1[1] = selected_set
                 blocked_walls.append(random_wall)
-                time.sleep(0.1)
+                # time.sleep(0.1)
 
             for x in path_parts:
                 if x["connects"][0][1] != x["connects"][1][1]:
@@ -82,14 +86,16 @@ class MazeGen(container.Container):
         top = random.choice(tops)
         self.remove_side(bottom[0], "bottom")
         self.remove_side(top[0], "top")
+        return blocked_walls, bottom, top
 
-    def remove_side(self, rect, side):
+    def remove_side(self, rect, side, color="white"):
+        # Removing graphic representation of a wall.
         if side == "left":
-            pg.draw.rect(self.screen, "black", (rect.topleft[0] - 2, rect.topleft[1], 4, rect.height))
+            pg.draw.rect(self.screen, color, (rect.topleft[0] - 2, rect.topleft[1], 4, rect.height))
         elif side == "right":
-            pg.draw.rect(self.screen, "black", (rect.topright[0] - 2, rect.topright[1], 4, rect.height))
+            pg.draw.rect(self.screen, color, (rect.topright[0] - 2, rect.topright[1], 4, rect.height))
         elif side == "top":
-            pg.draw.rect(self.screen, "black", (rect.topleft[0], rect.topleft[1] - 2, rect.width, 4))
+            pg.draw.rect(self.screen, color, (rect.topleft[0], rect.topleft[1] - 2, rect.width, 4))
         elif side == "bottom":
-            pg.draw.rect(self.screen, "black", (rect.bottomleft[0], rect.bottomleft[1] - 2, rect.width, 4))
+            pg.draw.rect(self.screen, color, (rect.bottomleft[0], rect.bottomleft[1] - 2, rect.width, 4))
         pg.display.update()

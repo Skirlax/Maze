@@ -1,0 +1,288 @@
+ def _h(self, end_node_rect, current_node_rect):
+        y_distance = max(end_node_rect.top, current_node_rect.bottom) - min(end_node_rect.top, current_node_rect.bottom)
+        x_distance = max(end_node_rect.left, current_node_rect.left) - min(end_node_rect.left, current_node_rect.left)
+
+        # Calculating the air distance between points using Pythagorean theorem
+        return math.sqrt((x_distance ** 2) + (y_distance ** 2))
+
+    def _g(self, path):
+        return len(path)
+
+    def solve(self, rects, removed_walls, path_parts, start, end):
+        # TODO: Implement path from start and find out where the algorithm gets stuck.
+
+        f = None  # F is the evaluation of given move. The lower, the better.
+        open_list = []
+        final_path = []
+        possible_moves = []
+        closed_list = []
+        for x in copy.deepcopy(path_parts):
+            for y in removed_walls:
+                if x == y:
+                    path_parts.remove(x)
+
+        # children = self._get_children(position, rects)
+        # move = random.choice(children)
+        # path = self._get_path_to_node(self._position(move[0][0], rects), position, path_parts)
+        # f = self._g(path) + self._h(pg.Rect(end[0], end[1], self.rect_size, self.rect_size), move[0][1])
+        # open_list.append(f)
+        # closed_list.append(min(open_list))
+
+        start_rect_id = [index for index, b in enumerate(rects) if b[0] == start[0]][0]
+        end_rect_id = [index for index, b in enumerate(rects) if b[0] == end[0]][0]
+        open_list.append({"rect_id": start_rect_id, "f": 10000, "g": 0, "h": None})
+        used_rects = []
+        # position = self._position(start_rect_id, rects)
+        while not [x for x in closed_list if x["rect_id"] == end_rect_id]:
+            possible_moves.clear()
+            temp = min([x["f"] for x in open_list if x["f"] is not None])
+            lowest_f_rect = [x for x in open_list if x["f"] == temp][0]
+            lowest_f_rect_position = self._position(lowest_f_rect["rect_id"], rects)
+            used_rects.append(lowest_f_rect_position)
+            self.higlight(rects[lowest_f_rect["rect_id"]][0])
+            # if len(open_list) > 1:
+            #
+            #     if self.simulate_path(pg.Rect(end_rect_pos[0], end_rect_pos[1], self.rect_size, self.rect_size),
+            #                           path_parts, lowest_f_rect_position, 2, used_rects):
+            #         final_path.append(lowest_f_rect["rect_id"])
+            #         closed_list.append(lowest_f_rect)
+            #     else:
+            #         open_list.remove(lowest_f_rect)
+            #         continue
+
+            for child in self._get_children(lowest_f_rect_position, rects):
+                path = self._get_path_to_node(self._position(child[0][0], rects), lowest_f_rect_position, path_parts)
+                if len(path) == 0:
+                    continue
+
+                possible_moves.append(child[0])
+                g = self._g(final_path) + len(path)
+                h = self._h(rects[end_rect_id][0], child[0][1])
+                f = h + g
+                if len(possible_moves) > 1:
+                    end_rect_pos = self._position(end_rect_id, rects)
+                    possible_moves_choice = random.choice(possible_moves)
+                    if not self.simulate_path(pg.Rect(end_rect_pos[0], end_rect_pos[1], self.rect_size, self.rect_size),
+                                              path_parts, [possible_moves_choice[1][0], possible_moves_choice[1][1]], 3,
+                                              used_rects):
+                        try:
+                            open_list.remove([x for x in open_list if x["rect_id"] == possible_moves_choice[0]][0])
+                        except IndexError:
+                            pass
+
+                        print("hi")
+                        if child[0][0] == possible_moves_choice[0]:
+                            continue
+
+                if not [x for x in open_list if x["rect_id"] == child[0][0]]:
+                    open_list.append({"rect_id": child[0][0], "f": f, "g": g, "h": h})
+                # else:
+                #     open_list_element = [x for x in open_list if x["rect_id"] == child[0][0]][0]
+                #     if open_list_element["g"] > g:
+                #         open_list_element["g"] = g
+                #         open_list_element["f"] = f
+                # self.remove_highligh(child[0][1])
+
+    def _get_path_to_node(self, move, current_move, path_parts):
+        # Finding if path to the chosen node is a straight walkable line.
+        path = []
+        broke = False
+        if move[1] != current_move[1] and move[0] == current_move[0]:
+            for rect_y in range(min(current_move[1], move[1]), max(current_move[1], move[1]), self.rect_size):
+                # if [x for x in path_parts if x["connects"][0][0] == pg.Rect(move[0],rect_y, self.rect_size, self.rect_size)
+                #         or x["connects"][1][0] == pg.Rect(move[0],rect_y, self.rect_size, self.rect_size) and x["side"] == "top" ]:
+                #         break
+                for b in path_parts:
+                    if b["connects"][0][0] == pg.Rect(move[0], rect_y + self.rect_size, self.rect_size,
+                                                      self.rect_size) or b["connects"][1][0] == pg.Rect(move[0],
+                                                                                                        rect_y + self.rect_size,
+                                                                                                        self.rect_size,
+                                                                                                        self.rect_size):
+                        if b["side"] == "top":
+                            broke = True
+                            break
+                if broke:
+                    break
+
+                path.append(pg.Rect(move[0], rect_y, self.rect_size, self.rect_size))
+            else:
+                return path
+        elif move[0] != current_move[0] and move[1] == current_move[1]:
+            for x in range(min(current_move[0], move[0]), max(current_move[0], move[0]), self.rect_size):
+                # if [b for b in path_parts if
+                #
+                #     b["connects"][1][0] == pg.Rect(x, move[1], self.rect_size, self.rect_size)
+                #         or b["connects"][0][0] == pg.Rect(x, move[1], self.rect_size, self.rect_size)
+                #         and b["side"] == "left"]:
+                for b in path_parts:
+                    if b["connects"][0][0] == pg.Rect(x + self.rect_size, move[1], self.rect_size, self.rect_size) or \
+                            b["connects"][1][0] == pg.Rect(x, move[1], self.rect_size, self.rect_size):
+                        if b["side"] == "left":
+                            broke = True
+                            break
+                if broke:
+                    break
+
+                path.append(pg.Rect(x, move[1], self.rect_size, self.rect_size))
+            else:
+                return path
+
+        return path
+
+    def _position(self, rect_id, rects):
+        return [[x[0][0], x[0][1]] for index, x in enumerate(rects) if index == rect_id][0]
+
+    def _get_children(self, node_position, rects):
+        # Child is every rectangle in a 3x3 grid (excluding the current node), where node_position (current algorithm's position) is the center.
+        indexes_matrix = np.array([[index, x[0]] for index, x in enumerate(rects)]).reshape(
+            (self.rects_in_row, self.rects_in_column, 2))
+        children = []
+        for y in range(node_position[1] - self.rect_size, node_position[1] + self.rect_size * 2, self.rect_size):
+            for x in range(node_position[0] - self.rect_size, node_position[0] + self.rect_size * 2, self.rect_size):
+                if node_position == [x,
+                                     y] or y > self.rect_size * self.rects_in_column - self.rect_size or x > self.rect_size * self.rects_in_row - self.rect_size:
+                    continue
+                try:
+                    rect_id = (x // self.rect_size) * self.rects_in_column + (y // self.rect_size)
+                    target = np.where(indexes_matrix == rect_id)
+                    children.append(indexes_matrix[target[0]][0][target[1]])
+
+                except IndexError:
+                    pass
+
+        return children
+
+    def higlight(self, rect):
+        pg.draw.rect(self.screen, "green", (rect.x + 10, rect.y + 10, rect.width - 20, rect.height - 20), 3)
+        pg.display.update()
+
+    def remove_highligh(self, rect):
+        pg.draw.rect(self.screen, "red", rect, 3)
+        pg.display.update()
+
+    def can_move_x(self, current_move, path_parts, direction):
+        for b in path_parts:
+            if direction == "right":
+                if b["connects"][0][0] == pg.Rect(current_move[0] + self.rect_size, current_move[1], self.rect_size,
+                                                  self.rect_size) or b["connects"][1][0] == pg.Rect(
+                    current_move[0], current_move[1], self.rect_size, self.rect_size):
+                    if b["side"] == "left":
+                        break
+
+            elif direction == "left":
+                if b["connects"][0][0] == pg.Rect(current_move[0], current_move[1], self.rect_size,
+                                                  self.rect_size) or b["connects"][1][0] == pg.Rect(
+                    current_move[0] + self.rect_size,
+                    current_move[1],
+                    self.rect_size,
+                    self.rect_size):
+                    if b["side"] == "left":
+                        break
+
+        else:
+            return True
+
+    def can_move_y(self, current_move, path_parts, direction):
+        for b in path_parts:
+            if direction == "down":
+                if b["connects"][0][0] == pg.Rect(current_move[0], current_move[1] + self.rect_size, self.rect_size,
+                                                  self.rect_size) or b["connects"][1][0] == pg.Rect(current_move[0],
+                                                                                                    current_move[
+                                                                                                        1] + self.rect_size,
+                                                                                                    self.rect_size,
+                                                                                                    self.rect_size):
+                    if b["side"] == "top":
+                        break
+
+            elif direction == "up":
+                if b["connects"][0][0] == pg.Rect(current_move[0], current_move[1], self.rect_size,
+                                                  self.rect_size) or b["connects"][1][0] == pg.Rect(current_move[0],
+                                                                                                    current_move[1],
+                                                                                                    self.rect_size,
+                                                                                                    self.rect_size):
+                    if b["side"] == "top":
+                        break
+
+        else:
+            return True
+
+    def simulate_path(self, end_node, path_parts, current_move, limit, last_forbidden):
+        move_counter = 0
+        lowest_cost = 10000
+        blocked_moves = []
+        blocked_moves.extend(last_forbidden)
+        current_move_cop = copy.deepcopy(current_move)
+
+        while move_counter < 4 and limit > 0:
+            move_counter = 0
+            if self.can_move_x(current_move_cop, path_parts, "left") and [current_move_cop[
+                                                                              0] - 100,
+                                                                          current_move_cop[1]] not in blocked_moves:
+                if current_move_cop[0] - 100 > 0:
+                    h_val = self._h(end_node,
+                                    pg.Rect(current_move_cop[0] - 100, current_move_cop[1], self.rect_size,
+                                            self.rect_size))
+                    if lowest_cost > h_val:
+                        lowest_cost = h_val
+                        blocked_moves.append(copy.deepcopy(current_move_cop))
+                        current_move_cop[0] -= 100
+                else:
+                    move_counter += 1
+            else:
+                move_counter += 1
+
+            if self.can_move_x(current_move_cop, path_parts, "right") and [current_move_cop[
+                                                                               0] + 100,
+                                                                           current_move_cop[1]] not in blocked_moves:
+                if current_move_cop[0] + 100 < self.rects_in_row * self.rect_size and current_move_cop[0]:
+                    h_val = self._h(end_node,
+                                    pg.Rect(current_move_cop[0] + 100, current_move_cop[1], self.rect_size,
+                                            self.rect_size))
+                    if lowest_cost > h_val:
+                        lowest_cost = h_val
+                        blocked_moves.append(copy.deepcopy(current_move_cop))
+                        current_move_cop[0] += 100
+                else:
+                    move_counter += 1
+
+            else:
+                move_counter += 1
+
+            if self.can_move_y(current_move_cop, path_parts, "up") and [current_move_cop[0], current_move_cop[
+                                                                                                 1] - 100] not in blocked_moves:
+                if current_move_cop[1] > 0 and current_move_cop[1]:
+                    h_val = self._h(end_node,
+                                    pg.Rect(current_move_cop[0], current_move_cop[1] - 100, self.rect_size,
+                                            self.rect_size))
+                    if lowest_cost > h_val:
+                        lowest_cost = h_val
+                        blocked_moves.append(copy.deepcopy(current_move_cop))
+                        current_move_cop[1] -= 100
+                else:
+                    move_counter += 1
+            else:
+                move_counter += 1
+            if self.can_move_y(current_move_cop, path_parts, "down") and [current_move_cop[0], current_move_cop[
+                                                                                                   1] + 100] not in blocked_moves:
+                if current_move_cop[1] < self.rect_size * self.rects_in_column - self.rect_size:
+                    h_val = self._h(end_node,
+                                    pg.Rect(current_move_cop[0], current_move_cop[1] + 100, self.rect_size,
+                                            self.rect_size))
+                    if lowest_cost > h_val:
+                        lowest_cost = h_val
+                        blocked_moves.append(copy.deepcopy(current_move_cop))
+                        current_move_cop[1] += 100
+
+                else:
+                    move_counter += 1
+
+
+            else:
+                move_counter += 1
+
+            limit -= 1
+
+        if limit == 0:
+            return True
+        else:
+            return False
