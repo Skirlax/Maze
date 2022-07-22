@@ -1,3 +1,3 @@
 # Maze
 
-Under heavy construction, will let you generate and solve random maze...
+You can generate using the Kruskal's algorithm and then let simple wall follower solve it.
