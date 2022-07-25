@@ -26,6 +26,10 @@ class Main(container.Container):
             pressed = bool(pg.key.get_pressed()[pg.K_SPACE])
         path_parts = gn.create_path_parts(rects)
         removed_walls, start, end = gn.generate_maze(rects, path_parts)
+        pressed = False
+        while not pressed:
+            self._check_for_exit()
+            pressed = bool(pg.key.get_pressed()[pg.K_SPACE])
         solve.solve([x for x in path_parts if x not in removed_walls], rects, start, end)
 
         while True:

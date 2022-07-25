@@ -71,6 +71,8 @@ class MazeGen(container.Container):
                 rect_2[1] = selected_set
                 rect_1[1] = selected_set
                 blocked_walls.append(random_wall)
+            else:
+                continue
                 # time.sleep(0.1)
 
             for x in path_parts:
@@ -80,12 +82,18 @@ class MazeGen(container.Container):
             else:
                 run = False
 
-        bottoms = [x for x in rects if x[0].y == self.rects_in_column * self.rect_size - self.rect_size]
-        tops = [x for x in rects if x[0].y == 0]
-        bottom = random.choice(bottoms)
-        top = random.choice(tops)
-        self.remove_side(bottom[0], "bottom")
-        self.remove_side(top[0], "top")
+        # bottoms = [x for x in rects if x[0].y == self.rects_in_column * self.rect_size - self.rect_size]
+        # tops = [x for x in rects if x[0].y == 0]
+
+        # bottom = random.choice(bottoms)
+        # top = random.choice(tops)
+        bottom = [x for x in rects if x[0] == pg.Rect(0, self.rects_in_column * self.rect_size - self.rect_size, self.rect_size, self.rect_size)][0]
+        top = [x for x in rects if x[0] == pg.Rect(self.rects_in_row * self.rect_size - self.rect_size, 0, self.rect_size, self.rect_size)][0]
+        pg.draw.rect(self.screen, "blue",(bottom[0]))
+        pg.draw.rect(self.screen, "green",(top[0]))
+        pg.display.update()
+        # self.remove_side(bottom[0], "bottom",color="blue")
+        # self.remove_side(top[0], "top",color="green")
         return blocked_walls, bottom, top
 
     def remove_side(self, rect, side, color="white"):
